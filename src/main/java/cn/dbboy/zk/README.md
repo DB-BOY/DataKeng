@@ -16,24 +16,16 @@
 ### 1. zk架构       
 > C/S
 
-0. Client
-   
-    从server获取信息，周期性发送数据给server，表示自己还活着。
-    client连接时，server回传ack信息。
-    如果client没有收到response，自动重定向到另一个server.
+<style>
+table th:first-of-type {
+	width: 100px;
+}
+</style>
 
-1. Server
-
-	zk集群中的一员，向client提供所有service，回传ack信息给client，表示自己还活着。
-
-2. ensemble
-
-	一组服务器。
-	最小节点数是3.
-
-3. Leader
-
-	如果连接的节点失败，自定恢复，zk服务启动时，完成leader选举。
-
-4. Follower
-	追寻leader指令的节点。
+| 部分 | 描述 |
+| :----- | :----- |
+|Client(客户端)|应用集群中的一个节点，从服务器访问信息。<br>对于特定的时间间隔，每个客户端向服务器发送消息以使服务器知道客户端是活跃的。<br>类似地，当客户端连接时，服务器发送确认码。如果连接的服务器没有响应，<br>客户端会自动将消息重定向到另一个服务器。|
+|Server(服务端)|ZooKeeper总体中的一个节点，为客户端提供所有的服务。向客户端发送确认码以告知服务器是活跃的。|
+|Ensemble|ZooKeeper服务器组。形成ensemble所需的最小节点数为3。|
+|Leader|任何连接的节点失败，则执行自动恢复。Leader在服务启动时被选举。|
+|Follower|跟随leader指令的服务器节点。|
