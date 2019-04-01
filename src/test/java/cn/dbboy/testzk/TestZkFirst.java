@@ -1,6 +1,7 @@
 package cn.dbboy.testzk;
 
 import cn.dbboy.zk.ZkFirst;
+import org.apache.zookeeper.CreateMode;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,4 +26,18 @@ public class TestZkFirst {
         first.getChildNode("/");
     }
 
+    @Test
+    public void addData() throws Exception {
+        first.addNodeData("/dbboy", "test");
+    }
+
+    @Test
+    public void crateNode() throws Exception {
+        first.createNode("/dbboy/tmp", "tmplslssslslsl", CreateMode.EPHEMERAL);
+    }
+
+    @Test
+    public void testWatch() throws Exception {
+        first.addWatches();
+    }
 }
