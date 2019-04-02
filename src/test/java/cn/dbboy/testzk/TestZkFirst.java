@@ -23,7 +23,7 @@ public class TestZkFirst {
 
     @Test
     public void getAllNode() throws Exception {
-        first.getChildNode("/");
+        first.getChildNode("/brokers/topics");
     }
 
     @Test

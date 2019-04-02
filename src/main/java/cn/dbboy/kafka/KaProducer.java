@@ -17,7 +17,9 @@ public class KaProducer implements Runnable {
     KafkaProducer<String, String> producer;
 
     public static void main(String[] args) {
-        new KaProducer().send();
+        KaProducer k = new KaProducer();
+        k.create();
+        k.send();
     }
 
     public void create() {
@@ -25,12 +27,11 @@ public class KaProducer implements Runnable {
         //broker列表
         props.put("bootstrap.servers", Url.ka_bootstrap);
         //串行化
-        props.put("group.id", "hellokfk");
-        props.put("serializer.class", "kafka.serializer.StringEncoder");
+        props.put("group.id", "log2kfk");
         props.put("key.serializer", StringSerializer.class.getName());
         props.put("value.serializer", StringSerializer.class.getName());
         props.put("batch.size", 16384);
-        props.put("acks", "all");
+        props.put("acks", "1");
         props.put("retries", 0);
 
         producer = new KafkaProducer<String, String>(props);
@@ -42,7 +43,7 @@ public class KaProducer implements Runnable {
         try {
             for (int i = 0; i < 10; i++) {
                 msg = "--producer: ms: " + i;
-                producer.send(new ProducerRecord<String, String>("hellokfk", msg));
+                producer.send(new ProducerRecord<String, String>("log2kfk", msg));
                 System.out.println(msg);
             }
         } catch (Exception e) {

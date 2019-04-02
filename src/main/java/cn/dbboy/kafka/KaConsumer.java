@@ -23,14 +23,15 @@ public class KaConsumer implements Runnable {
     }
 
     public static void main(String[] args) {
-        KaConsumer c = new KaConsumer("hellokfk");
+        KaConsumer c = new KaConsumer("log2kfk");
+        c.create();
         c.consumer();
     }
 
     public void create() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", Url.ka_bootstrap);
-        properties.put("group.id", "hellokfk");
+        properties.put("bootstrap.servers", Url.ka_consumer);
+        properties.put("group.id", "g1");
         properties.put("enable.auto.commit", "true");
         properties.put("auto.commit.interval.ms", "1000");
         properties.put("auto.offset.reset", "earliest");
@@ -44,8 +45,9 @@ public class KaConsumer implements Runnable {
     public void consumer() {
         kafkaConsumer.subscribe(Arrays.asList(topic));
         try {
+            ConsumerRecords<String, String> records;
             while (true) {
-                ConsumerRecords<String, String> records = kafkaConsumer.poll(100);
+                records = kafkaConsumer.poll(1000);
                 for (ConsumerRecord<String, String> record : records) {
                     System.out.printf("------> offset = %d, value = %s", record.offset(), record.value());
                     System.out.println();
