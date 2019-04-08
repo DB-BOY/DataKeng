@@ -16,8 +16,14 @@ public class KaProducer implements Runnable {
 
     KafkaProducer<String, String> producer;
 
+    String topic;
+
+    public KaProducer(String topic) {
+        this.topic = topic;
+    }
+
     public static void main(String[] args) {
-        KaProducer k = new KaProducer();
+        KaProducer k = new KaProducer("log2kfk");
         k.create();
         k.send();
     }
@@ -27,7 +33,7 @@ public class KaProducer implements Runnable {
         //broker列表
         props.put("bootstrap.servers", Url.ka_bootstrap);
         //串行化
-        props.put("group.id", "log2kfk");
+        props.put("group.id", topic);
         props.put("key.serializer", StringSerializer.class.getName());
         props.put("value.serializer", StringSerializer.class.getName());
         props.put("batch.size", 16384);
@@ -43,7 +49,7 @@ public class KaProducer implements Runnable {
         try {
             for (int i = 0; i < 10; i++) {
                 msg = "--producer: ms: " + i;
-                producer.send(new ProducerRecord<String, String>("log2kfk", msg));
+                producer.send(new ProducerRecord<String, String>(topic, msg));
                 System.out.println(msg);
             }
         } catch (Exception e) {

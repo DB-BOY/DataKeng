@@ -15,6 +15,23 @@
 	topic			//主题,副本数,分区.
 	zookeeper		//hadoop namenoade + RM HA | hbase | kafka
 
+##### 安装
+    
+1. 下载
+ 
+    wget http://mirrors.shu.edu.cn/apache/kafka/2.2.0/kafka_2.12-2.2.0.tgz
+    
+2. 解压
+
+    tar -zxvf kafka_2.12-2.2.0.tgz
+
+3. 环境变量
+    
+    * 建立符号连接 ln -s xxx /soft/kafka
+    * 配置/etc/profile
+
+
+
 ### 1. Kafka
 
 0. 配置server.properties
@@ -65,4 +82,5 @@
     
     /isr_change_notification
     
-    
+### 2. Productor/Consumer
+> 详见测试代码

@@ -8,7 +8,7 @@ package cn.dbboy.kafka;
 public class KafkaProducerTest {
 
     public static void main(String args[]) {
-        KaProducer producer = new KaProducer();
+        KaProducer producer = new KaProducer("hellokfk");
         KaConsumer consumer = new KaConsumer("hellokfk");
         Thread pt = new Thread(producer);
         Thread pc = new Thread(consumer);

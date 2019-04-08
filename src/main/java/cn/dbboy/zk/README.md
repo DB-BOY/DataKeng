@@ -25,6 +25,24 @@
         [zkCli]set /
         [zkCli]rmr /
 
+
+##### 安装
+    
+1. 下载
+ 
+    wget http://mirrors.shu.edu.cn/apache/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz
+    
+2. 解压
+
+    tar -zxvf zookeeper-3.4.14.tar.gz
+
+3. 环境变量
+    
+    * 建立符号连接 ln -s xxx /soft/zookeeper
+    * 配置/etc/profile
+
+
+
 ### 1. zk架构       
 > C/S
 
