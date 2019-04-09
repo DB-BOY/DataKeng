@@ -1,7 +1,6 @@
 package cn.dbboy.flume;
 
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
@@ -12,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,31 +19,31 @@ import java.util.regex.Pattern;
  * <br>
  * Created by DB_BOY on 2019/4/3.
  * <br>
- */
-
-/**
- * Created by zhouls.
- * <p>
  * 使用说明：
+ * <br>
  * ======================================================
- * # 定义拦截器
- * agent.sources.kafkaSource.interceptors = i0
- * # 设置拦截器类型
- * # gift_record:giftRecord的意思是会把日志中的gift_record替换为giftRecord
- * agent.sources.kafkaSource.interceptors.i0.type = zhouls.MySearchAndReplaceInterceptor
- * agent.sources.kafkaSource.interceptors.i0.searchReplace = "gift_record:giftRecord,video_info:videoInfo"
+ * <br>
+ * # 定义拦截器<br>
+ * agent.sources.kafkaSource.interceptors = i1<br>
+ * <p>
+ * # 设置拦截器类型<br>
+ * <p>
+ * # key:value  会把日志中的key替换为value<br>
+ * <p>
+ * agent.sources.kafkaSource.interceptors.i1.type = cn.dbboy.flume.LogInterceptor$Builder
+ * <br>
+ * agent.sources.kafkaSource.interceptors.i1.pattern =before:after
  * ======================================================
  */
 public class LogInterceptor implements Interceptor {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(LogInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogInterceptor.class);
 
     /**
      * 需要替换的字符串信息
      * 格式："key:value,key:value"
      */
-    private final String search_replace;
+    private final String patternParm;
     private String[] splits;
     private String[] key_value;
     private String key;
@@ -53,18 +53,20 @@ public class LogInterceptor implements Interceptor {
     private Matcher matcher;
     private String group;
 
-    private LogInterceptor(String search_replace) {
-        this.search_replace = search_replace;
+    private LogInterceptor(String patternkey) {
+        logger.info("\n-------------LogInterceptor: " + patternkey);
+        this.patternParm = patternkey;
     }
 
     /**
-     * 初始化放在，最开始执行一次
-     * 把配置的数据初始化到map中，方便后面调用
+     * 初始化，执行一次
      */
+    @Override
     public void initialize() {
+        logger.info("\n-------------init");
         try {
-            if (StringUtils.isNotBlank(search_replace)) {
-                splits = search_replace.split(",");
+            if (StringUtils.isNotBlank(patternParm)) {
+                splits = patternParm.split(",");
                 for (String key_value_pair : splits) {
                     key_value = key_value_pair.split(":");
                     key = key_value[0];
@@ -72,20 +74,15 @@ public class LogInterceptor implements Interceptor {
                     hashMap.put(key, value);
                 }
             }
-
-            Iterator<String> iterator = hashMap.keySet().iterator();
-            String next = iterator.next();
-            while (iterator.hasNext()) {
-                logger.error("初始化： " + next + "  " + hashMap.get(next));
-            }
         } catch (Exception e) {
-            logger.error("数据格式错误，初始化失败。" + search_replace, e.getCause());
+            logger.error("数据格式错误，初始化失败。" + patternParm, e.getCause());
         }
 
     }
 
+    @Override
     public void close() {
-
+        logger.info("\n-------close");
     }
 
 
@@ -96,14 +93,30 @@ public class LogInterceptor implements Interceptor {
      * @return
      */
     public Event intercept(Event event) {
+        logger.info("\n----------------keyset--------------------------");
+        Map<String, String> headers = event.getHeaders();
+        Iterator<Map.Entry<String, String>> iterator = headers.entrySet().iterator();
+        Map.Entry<String, String> entry;
+        while (iterator.hasNext()) {
+            entry = iterator.next();
+            logger.info(entry.getKey() + " " + entry.getValue());
+        }
+        logger.info("\n-------------------end-----------------------");
+
+
+        //具体处理逻辑
         try {
             String origBody = new String(event.getBody());
+
             matcher = compile.matcher(origBody);
             if (matcher.find()) {
                 group = matcher.group(1);
                 if (StringUtils.isNotBlank(group)) {
-                    String newBody = origBody.replaceAll("\"type\":\"" + group + "\"", "\"type\":\"" + hashMap.get(group) + "\"");
-                    event.setBody(newBody.getBytes());
+                    String value = hashMap.get(group);
+                    if (StringUtils.isNotBlank(value)) {
+                        String newBody = origBody.replaceAll("\"type\":\"" + group + "\"", "\"type\":\"" + value + "\"");
+                        event.setBody(newBody.getBytes());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -112,7 +125,10 @@ public class LogInterceptor implements Interceptor {
         return event;
     }
 
+
+    @Override
     public List<Event> intercept(List<Event> events) {
+        logger.info("-----------intercept----------------");
         for (Event event : events) {
             intercept(event);
         }
@@ -120,21 +136,24 @@ public class LogInterceptor implements Interceptor {
     }
 
     public static class Builder implements Interceptor.Builder {
-        private static final String SEARCH_REPLACE_KEY = "searchReplace";
+        private static final String PATTERN_KEY = "pattern";
 
-        private String searchReplace;
+        private String patternkey;
 
+        @Override
         public void configure(Context context) {
-            searchReplace = context.getString(SEARCH_REPLACE_KEY);
-            Preconditions.checkArgument(!StringUtils.isEmpty(searchReplace),
-                    "Must supply a valid search pattern " + SEARCH_REPLACE_KEY +
-                            " (may not be empty)");
+            patternkey = context.getString(PATTERN_KEY);
+            if (StringUtils.isEmpty(patternkey)) {
+                throw new IllegalArgumentException("Must supply a valid search pattern " + PATTERN_KEY + " (may not be empty)");
+            }
         }
 
+        @Override
         public Interceptor build() {
-            Preconditions.checkNotNull(searchReplace,
-                    "Regular expression searchReplace required");
-            return new LogInterceptor(searchReplace);
+            if (patternkey == null) {
+                new NullPointerException("Regular expression patternkey required");
+            }
+            return new LogInterceptor(patternkey);
         }
 
     }

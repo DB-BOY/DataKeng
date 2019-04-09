@@ -18,3 +18,6 @@
 4. 启动
     
     flume-ng agent -f /soft/flume/conf/nc2kafka.conf -n a1 -Dflume.root.logger=INFO,console
+
+
+### 1. 自定义Interceptor
